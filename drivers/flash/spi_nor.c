@@ -549,8 +549,8 @@ static int exit_dpd(const struct device *const dev)
 			}
 #endif /* T_EXIT_DPD */
 		}
-	}
 #endif /* ANY_INST_HAS_DPD */
+	}
 	return ret;
 }
 
