@@ -529,17 +529,15 @@ class KconfigCheck(ComplianceTest):
         kconfig_boards_file = os.path.join(kconfig_dir, 'boards', 'Kconfig.boards')
         kconfig_defconfig_file = os.path.join(kconfig_dir, 'boards', 'Kconfig.defconfig')
 
-        board_roots = self.get_module_setting_root('board', settings_file)
-        board_roots.insert(0, Path(ZEPHYR_BASE))
-        soc_roots = self.get_module_setting_root('soc', settings_file)
-        soc_roots.insert(0, Path(ZEPHYR_BASE))
-        root_args = argparse.Namespace(**{'board_roots': board_roots,
-                                          'soc_roots': soc_roots, 'board': None})
-        v2_boards = list_boards.find_v2_boards(root_args)
+        root_args = argparse.Namespace(**{'board_roots': [Path(ZEPHYR_BASE)],
+                                          'soc_roots': [Path(ZEPHYR_BASE)], 'board': None,
+                                          'board_dir': []})
+        v2_boards = list_boards.find_v2_boards(root_args).values()
 
         with open(kconfig_defconfig_file, 'w') as fp:
             for board in v2_boards:
-                fp.write('osource "' + (Path(board.dir) / 'Kconfig.defconfig').as_posix() + '"\n')
+                fp.write('osource "' +
+                         (board.directories[0] / 'Kconfig.defconfig').as_posix() + '"\n')
 
         with open(kconfig_boards_file, 'w') as fp:
             for board in v2_boards:
@@ -552,7 +550,8 @@ class KconfigCheck(ComplianceTest):
                     fp.write('config  ' + board_str + '\n')
                     fp.write('\t bool\n')
                 fp.write(
-                    'source "' + (Path(board.dir) / ('Kconfig.' + board.name)).as_posix() + '"\n\n'
+                    'source "' +
+                    (board.directories[0] / ('Kconfig.' + board.name)).as_posix() + '"\n\n'
                 )
 
         with open(kconfig_file, 'w') as fp:
@@ -560,7 +559,7 @@ class KconfigCheck(ComplianceTest):
                 'osource "' + (Path(kconfig_dir) / 'boards' / 'Kconfig.syms.v1').as_posix() + '"\n'
             )
             for board in v2_boards:
-                fp.write('osource "' + (Path(board.dir) / 'Kconfig').as_posix() + '"\n')
+                fp.write('osource "' + (Path(board.directories[0]) / 'Kconfig').as_posix() + '"\n')
 
         kconfig_defconfig_file = os.path.join(kconfig_dir, 'soc', 'Kconfig.defconfig')
         kconfig_soc_file = os.path.join(kconfig_dir, 'soc', 'Kconfig.soc')
@@ -569,7 +568,7 @@ class KconfigCheck(ComplianceTest):
         root_args = argparse.Namespace(**{'soc_roots': [Path(ZEPHYR_BASE)]})
         v2_systems = list_hardware.find_v2_systems(root_args)
 
-        soc_folders = {soc.folder for soc in v2_systems.get_socs()}
+        soc_folders = {soc.folder[0] for soc in v2_systems.get_socs()}
         with open(kconfig_defconfig_file, 'w') as fp:
             for folder in soc_folders:
                 fp.write('osource "' + (Path(folder) / 'Kconfig.defconfig').as_posix() + '"\n')
@@ -639,8 +638,8 @@ class KconfigCheck(ComplianceTest):
         os.makedirs(os.path.join(kconfiglib_dir, 'soc'), exist_ok=True)
         os.makedirs(os.path.join(kconfiglib_dir, 'arch'), exist_ok=True)
 
-        os.environ["BOARD_DIR"] = kconfiglib_boards_dir
-        self.get_v2_model(kconfiglib_dir, os.path.join(kconfiglib_dir, "settings_file.txt"))
+        os.environ["KCONFIG_BOARD_DIR"] = kconfiglib_boards_dir
+        self.get_v2_model(kconfiglib_dir)
 
         # Tells Kconfiglib to generate warnings for all references to undefined
         # symbols within Kconfig files
@@ -943,12 +942,9 @@ flagged.
                               # Zephyr toolchain variant and therefore not
                               # visible to compliance.
         "BOARD_", # Used as regex in scripts/utils/board_v1_to_v2.py
-        "BOOT_DIRECT_XIP", # Used in sysbuild for MCUboot configuration
-        "BOOT_DIRECT_XIP_REVERT", # Used in sysbuild for MCUboot configuration
-        "BOOT_FIRMWARE_LOADER", # Used in sysbuild for MCUboot configuration
-        "BOOT_RAM_LOAD", # Used in sysbuild for MCUboot configuration
-        "BOOT_SWAP_USING_MOVE", # Used in sysbuild for MCUboot configuration
-        "BOOT_SWAP_USING_SCRATCH", # Used in sysbuild for MCUboot configuration
+        "BOARD_MPS2_AN521_CPUTEST", # Used for board and SoC extension feature tests
+        "BOARD_NATIVE_SIM_NATIVE_64_TWO", # Used for board and SoC extension feature tests
+        "BOARD_NATIVE_SIM_NATIVE_ONE", # Used for board and SoC extension feature tests
         "BOOT_ENCRYPTION_KEY_FILE", # Used in sysbuild
         "BOOT_ENCRYPT_IMAGE", # Used in sysbuild
         "BOOT_MAX_IMG_SECTORS_AUTO", # Used in sysbuild
