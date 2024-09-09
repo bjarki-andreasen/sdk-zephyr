@@ -301,6 +301,8 @@ config MBEDTLS_CMAC
 	bool "CMAC (Cipher-based Message Authentication Code) mode for block ciphers."
 	depends on MBEDTLS_CIPHER_AES_ENABLED || MBEDTLS_CIPHER_DES_ENABLED
 
+endif
+
 if !(NRF_SECURITY || NORDIC_SECURITY_BACKEND)
 
 comment "Supported hash algorithms"
