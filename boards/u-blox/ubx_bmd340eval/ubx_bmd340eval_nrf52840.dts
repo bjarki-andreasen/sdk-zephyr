@@ -129,8 +129,11 @@
 		sw2 = &button2;
 		sw3 = &button3;
 		watchdog0 = &wdt0;
-		spi-flash0 = &mx25r64;
 	};
+};
+
+&reg1 {
+	regulator-initial-mode = <NRF5X_REG_MODE_DCDC>;
 };
 
 &adc {

@@ -97,6 +97,9 @@ static const struct device *const devices[] = {
 #ifdef CONFIG_COUNTER_TMR_ESP32
 	DEVS_FOR_DT_COMPAT(espressif_esp32_timer)
 #endif
+#ifdef CONFIG_COUNTER_TMR_RTC_ESP32
+	DEVS_FOR_DT_COMPAT(espressif_esp32_rtc_timer)
+#endif
 #ifdef CONFIG_COUNTER_NXP_S32_SYS_TIMER
 	DEVS_FOR_DT_COMPAT(nxp_s32_sys_timer)
 #endif
@@ -109,6 +112,9 @@ static const struct device *const devices[] = {
 #ifdef CONFIG_COUNTER_AMBIQ
 	DEVS_FOR_DT_COMPAT(ambiq_counter)
 #endif
+#ifdef CONFIG_COUNTER_MCUX_LPTMR
+	DEVS_FOR_DT_COMPAT(nxp_lptmr)
+#endif
 };
 
 static const struct device *const period_devs[] = {
@@ -118,7 +124,9 @@ static const struct device *const period_devs[] = {
 #ifdef CONFIG_COUNTER_MCUX_LPC_RTC
 	DEVS_FOR_DT_COMPAT(nxp_lpc_rtc)
 #endif
+#ifdef CONFIG_COUNTER_RTC_STM32
 	DEVS_FOR_DT_COMPAT(st_stm32_rtc)
+#endif
 };
 
 typedef void (*counter_test_func_t)(const struct device *dev);
@@ -175,6 +183,8 @@ static void counter_tear_down_instance(const struct device *dev)
 static void test_all_instances(counter_test_func_t func,
 				counter_capability_func_t capability_check)
 {
+	int devices_skipped = 0;
+
 	zassert_true(ARRAY_SIZE(devices) > 0, "No device found");
 	for (int i = 0; i < ARRAY_SIZE(devices); i++) {
 		counter_setup_instance(devices[i]);
@@ -184,11 +194,14 @@ static void test_all_instances(counter_test_func_t func,
 			func(devices[i]);
 		} else {
 			TC_PRINT("Skipped for %s\n", devices[i]->name);
-			ztest_test_skip();
+			devices_skipped++;
 		}
 		counter_tear_down_instance(devices[i]);
 		/* Allow logs to be printed. */
 		k_sleep(K_MSEC(100));
+	}
+	if (devices_skipped == ARRAY_SIZE(devices)) {
+		ztest_test_skip();
 	}
 }
 
@@ -964,7 +977,7 @@ static bool reliable_cancel_capable(const struct device *dev)
 	}
 #endif
 #ifdef CONFIG_COUNTER_AMBIQ
-	if (dev == DEVICE_DT_GET(DT_NODELABEL(counter0))) {
+	if (single_channel_alarm_capable(dev)) {
 		return true;
 	}
 #endif

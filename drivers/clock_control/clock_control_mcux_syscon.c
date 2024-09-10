@@ -71,6 +71,29 @@ static int mcux_lpc_syscon_clock_control_on(const struct device *dev,
 	}
 #endif
 
+#if defined(CONFIG_CAN_MCUX_FLEXCAN)
+	switch ((uint32_t)sub_system) {
+	case MCUX_FLEXCAN0_CLK:
+		CLOCK_EnableClock(kCLOCK_Flexcan0);
+		break;
+	case MCUX_FLEXCAN1_CLK:
+		CLOCK_EnableClock(kCLOCK_Flexcan1);
+		break;
+	default:
+		break;
+	}
+#endif /* defined(CONFIG_CAN_MCUX_MCAN) */
+
+#ifdef CONFIG_ETH_NXP_ENET
+	if ((uint32_t)sub_system == MCUX_ENET_CLK) {
+#ifdef CONFIG_SOC_SERIES_RW6XX
+		CLOCK_EnableClock(kCLOCK_TddrMciEnetClk);
+		CLOCK_EnableClock(kCLOCK_EnetIpg);
+		CLOCK_EnableClock(kCLOCK_EnetIpgS);
+#endif
+	}
+#endif
+
 	return 0;
 }
 
@@ -183,7 +206,7 @@ static int mcux_lpc_syscon_clock_control_get_subsys_rate(
 
 #if (defined(FSL_FEATURE_SOC_USDHC_COUNT) && FSL_FEATURE_SOC_USDHC_COUNT)
 
-#if CONFIG_SOC_FAMILY_NXP_MCX
+#if CONFIG_SOC_SERIES_MCXN
 	case MCUX_USDHC1_CLK:
 		*rate = CLOCK_GetUsdhcClkFreq();
 		break;
@@ -292,6 +315,14 @@ static int mcux_lpc_syscon_clock_control_get_subsys_rate(
 		break;
 #endif
 
+#ifdef CONFIG_ETH_NXP_ENET
+	case MCUX_ENET_CLK:
+#ifdef CONFIG_SOC_SERIES_RW6XX
+		*rate = CLOCK_GetTddrMciEnetClkFreq();
+#endif
+		break;
+#endif
+
 #if defined(CONFIG_MIPI_DBI_NXP_LCDIC)
 	case MCUX_LCDIC_CLK:
 		*rate = CLOCK_GetLcdClkFreq();
@@ -312,6 +343,27 @@ static int mcux_lpc_syscon_clock_control_get_subsys_rate(
 		break;
 #endif
 #endif /* CONFIG_ADC_MCUX_LPADC */
+
+#if defined(CONFIG_CAN_MCUX_FLEXCAN)
+	case MCUX_FLEXCAN0_CLK:
+		*rate = CLOCK_GetFlexcanClkFreq(0);
+		break;
+	case MCUX_FLEXCAN1_CLK:
+		*rate = CLOCK_GetFlexcanClkFreq(1);
+		break;
+#endif /* defined(CONFIG_CAN_MCUX_FLEXCAN) */
+
+#if defined(CONFIG_MCUX_FLEXIO)
+	case MCUX_FLEXIO0_CLK:
+		*rate = CLOCK_GetFlexioClkFreq();
+		break;
+#endif /* defined(CONFIG_MCUX_FLEXIO) */
+
+#if defined(CONFIG_I2S_MCUX_FLEXCOMM)
+	case MCUX_AUDIO_MCLK:
+		*rate = CLOCK_GetMclkClkFreq();
+		break;
+#endif /* defined(CONFIG_I2S_MCUX_FLEXCOMM) */
 	}
 
 	return 0;
