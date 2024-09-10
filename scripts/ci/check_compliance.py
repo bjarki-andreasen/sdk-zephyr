@@ -379,29 +379,6 @@ class KconfigCheck(ComplianceTest):
                 ))
             fp_module_file.write(content)
 
-    def get_module_setting_root(self, root, settings_file):
-        """
-        Generate the Kconfig.dts using dts/bindings as the source.
-
-        This is needed to complete Kconfig compliance tests.
-
-        """
-        # Invoke the script directly using the Python executable since this is
-        # not a module nor a pip-installed Python utility
-        root_paths = []
-
-        if os.path.exists(settings_file):
-            with open(settings_file, 'r') as fp_setting_file:
-                content = fp_setting_file.read()
-
-            lines = content.strip().split('\n')
-            for line in lines:
-                root = root.upper()
-                if line.startswith(f'"{root}_ROOT":'):
-                    _, root_path = line.split(":", 1)
-                    root_paths.append(Path(root_path.strip('"')))
-        return root_paths
-
     def get_kconfig_dts(self, kconfig_dts_file, settings_file):
         """
         Generate the Kconfig.dts using dts/bindings as the source.
@@ -416,9 +393,15 @@ class KconfigCheck(ComplianceTest):
         binding_paths = []
         binding_paths.append(os.path.join(ZEPHYR_BASE, "dts", "bindings"))
 
-        dts_root_paths = self.get_module_setting_root('dts', settings_file)
-        for p in dts_root_paths:
-            binding_paths.append(p / "dts" / "bindings")
+        if os.path.exists(settings_file):
+            with open(settings_file, 'r') as fp_setting_file:
+                content = fp_setting_file.read()
+
+            lines = content.strip().split('\n')
+            for line in lines:
+                if line.startswith('"DTS_ROOT":'):
+                    _, dts_root_path = line.split(":", 1)
+                    binding_paths.append(os.path.join(dts_root_path.strip('"'), "dts", "bindings"))
 
         cmd = [sys.executable, zephyr_drv_kconfig_path,
                '--kconfig-out', kconfig_dts_file, '--bindings-dirs']
@@ -456,7 +439,7 @@ class KconfigCheck(ComplianceTest):
                     fp_kconfig_v1_syms_file.write('\n\t' + kconfiglib.TYPE_TO_STR[s.type])
                     fp_kconfig_v1_syms_file.write('\n\n')
 
-    def get_v2_model(self, kconfig_dir, settings_file):
+    def get_v2_model(self, kconfig_dir):
         """
         Get lists of v2 boards and SoCs and put them in a file that is parsed by
         Kconfig
