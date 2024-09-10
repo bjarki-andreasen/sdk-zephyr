@@ -56,6 +56,26 @@ int i2c_stm32_get_config(const struct device *dev, uint32_t *config)
 
 	*config = data->dev_config;
 
+#if CONFIG_I2C_STM32_V2_TIMING
+	/* Print the timing parameter of device data */
+	LOG_INF("I2C timing value, report to the DTS :");
+
+	/* I2C BIT RATE */
+	if (data->current_timing.i2c_speed == 100000) {
+		LOG_INF("timings = <%d I2C_BITRATE_STANDARD 0x%X>;",
+			data->current_timing.periph_clock,
+			data->current_timing.timing_setting);
+	} else if (data->current_timing.i2c_speed == 400000) {
+		LOG_INF("timings = <%d I2C_BITRATE_FAST 0x%X>;",
+			data->current_timing.periph_clock,
+			data->current_timing.timing_setting);
+	} else if (data->current_timing.i2c_speed == 1000000) {
+		LOG_INF("timings = <%d I2C_SPEED_FAST_PLUS 0x%X>;",
+			data->current_timing.periph_clock,
+			data->current_timing.timing_setting);
+	}
+#endif /* CONFIG_I2C_STM32_V2_TIMING */
+
 	return 0;
 }
 
@@ -156,9 +176,6 @@ static int i2c_stm32_transfer(const struct device *dev, struct i2c_msg *msg,
 				ret = -EINVAL;
 				break;
 			}
-		} else {
-			/* Stop condition is required for the last message */
-			current->flags |= I2C_MSG_STOP;
 		}
 
 		current++;
@@ -291,7 +308,6 @@ restore:
 }
 #endif /* CONFIG_I2C_STM32_BUS_RECOVERY */
 
-
 static const struct i2c_driver_api api_funcs = {
 	.configure = i2c_stm32_runtime_configure,
 	.transfer = i2c_stm32_transfer,
@@ -302,6 +318,9 @@ static const struct i2c_driver_api api_funcs = {
 #if defined(CONFIG_I2C_TARGET)
 	.target_register = i2c_stm32_target_register,
 	.target_unregister = i2c_stm32_target_unregister,
+#endif
+#ifdef CONFIG_I2C_RTIO
+	.iodev_submit = i2c_iodev_submit_fallback,
 #endif
 };
 

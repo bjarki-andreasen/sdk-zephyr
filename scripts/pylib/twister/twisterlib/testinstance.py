@@ -4,6 +4,7 @@
 # Copyright 2022 NXP
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
+from enum import Enum
 import os
 import hashlib
 import random
@@ -14,8 +15,9 @@ import csv
 
 from twisterlib.testsuite import TestCase, TestSuite
 from twisterlib.platform import Platform
-from twisterlib.error import BuildError
+from twisterlib.error import BuildError, StatusAttributeError
 from twisterlib.size_calc import SizeCalculator
+from twisterlib.statuses import TwisterStatus
 from twisterlib.handlers import (
     Handler,
     SimulationHandler,
@@ -46,7 +48,7 @@ class TestInstance:
         self.testsuite: TestSuite = testsuite
         self.platform: Platform = platform
 
-        self.status = None
+        self._status = TwisterStatus.NONE
         self.reason = "Unknown"
         self.metrics = dict()
         self.handler = None
@@ -67,6 +69,8 @@ class TestInstance:
             self.build_dir = os.path.join(outdir, platform.normalized_name, source_dir_rel, testsuite.name)
         self.run_id = self._get_run_id()
         self.domains = None
+        # Instance need to use sysbuild if a given suite or a platform requires it
+        self.sysbuild = testsuite.sysbuild or platform.sysbuild
 
         self.run = False
         self.testcases: list[TestCase] = []
@@ -90,9 +94,22 @@ class TestInstance:
                 cw.writeheader()
                 cw.writerows(self.recording)
 
+    @property
+    def status(self) -> TwisterStatus:
+        return self._status
+
+    @status.setter
+    def status(self, value : TwisterStatus) -> None:
+        # Check for illegal assignments by value
+        try:
+            key = value.name if isinstance(value, Enum) else value
+            self._status = TwisterStatus[key]
+        except KeyError:
+            raise StatusAttributeError(self.__class__, value)
+
     def add_filter(self, reason, filter_type):
         self.filters.append({'type': filter_type, 'reason': reason })
-        self.status = "filtered"
+        self.status = TwisterStatus.FILTER
         self.reason = reason
         self.filter_type = filter_type
 
@@ -122,9 +139,9 @@ class TestInstance:
 
     def add_missing_case_status(self, status, reason=None):
         for case in self.testcases:
-            if case.status == 'started':
-                case.status = "failed"
-            elif not case.status:
+            if case.status == TwisterStatus.STARTED:
+                case.status = TwisterStatus.FAIL
+            elif case.status == TwisterStatus.NONE:
                 case.status = status
                 if reason:
                     case.reason = reason
@@ -180,7 +197,7 @@ class TestInstance:
             # command-line, then we need to run the test, not just build it.
             fixture = testsuite.harness_config.get('fixture')
             if fixture:
-                can_run = fixture in fixtures
+                can_run = fixture in map(lambda f: f.split(sep=':')[0], fixtures)
 
         return can_run
 
@@ -335,7 +352,7 @@ class TestInstance:
 
     def get_elf_file(self) -> str:
 
-        if self.testsuite.sysbuild:
+        if self.sysbuild:
             build_dir = self.domains.get_default_domain().build_dir
         else:
             build_dir = self.build_dir

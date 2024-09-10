@@ -279,7 +279,7 @@ static int dai_nhlt_dmic_dai_params_get(struct dai_intel_dmic *dmic, const int c
 static inline void dai_dmic_clock_select_set(const struct dai_intel_dmic *dmic, uint32_t source)
 {
 	uint32_t val;
-#ifdef CONFIG_SOC_INTEL_ACE20_LNL /* Ace 2.0 */
+#if defined(CONFIG_SOC_INTEL_ACE20_LNL) || defined(CONFIG_SOC_INTEL_ACE30_PTL) /* ACE 2.0,3.0 */
 	val = sys_read32(dmic->vshim_base + DMICLVSCTL_OFFSET);
 	val &= ~DMICLVSCTL_MLCS;
 	val |= FIELD_PREP(DMICLVSCTL_MLCS, source);
@@ -300,7 +300,7 @@ static inline void dai_dmic_clock_select_set(const struct dai_intel_dmic *dmic, 
 static inline uint32_t dai_dmic_clock_select_get(const struct dai_intel_dmic *dmic)
 {
 	uint32_t val;
-#ifdef CONFIG_SOC_INTEL_ACE20_LNL /* Ace 2.0 */
+#if defined(CONFIG_SOC_INTEL_ACE20_LNL) || defined(CONFIG_SOC_INTEL_ACE30_PTL) /* ACE 2.0,3.0 */
 	val = sys_read32(dmic->vshim_base + DMICLVSCTL_OFFSET);
 	return FIELD_GET(DMICLVSCTL_MLCS, val);
 #else
@@ -322,7 +322,7 @@ static int dai_dmic_set_clock(const struct dai_intel_dmic *dmic, const uint8_t c
 		return -ENOTSUP;
 	}
 
-#ifndef CONFIG_SOC_INTEL_ACE20_LNL /* Ace 2.0 */
+#if defined(CONFIG_SOC_INTEL_ACE15_MTPM)
 	if (clock_source && !(sys_read32(dmic->shim_base + DMICLCAP_OFFSET) & DMICLCAP_MLCS)) {
 		return -ENOTSUP;
 	}
@@ -668,8 +668,9 @@ int dai_dmic_set_config_nhlt(struct dai_intel_dmic *dmic, const void *bespoke_cf
 
 	/* Configure clock source */
 	ret = dai_dmic_set_clock(dmic, dmic_cfg->clock_source);
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 
 	/* Get OUTCONTROLx configuration */
 	if (num_fifos < 1 || num_fifos > DMIC_HW_FIFOS_MAX) {
@@ -678,8 +679,9 @@ int dai_dmic_set_config_nhlt(struct dai_intel_dmic *dmic, const void *bespoke_cf
 	}
 
 	for (n = 0; n < DMIC_HW_FIFOS_MAX; n++) {
-		if (!(channel_ctrl_mask & (1 << n)))
+		if (!(channel_ctrl_mask & (1 << n))) {
 			continue;
+		}
 
 		val = *(uint32_t *)p;
 		ret = print_outcontrol(val);
@@ -802,8 +804,9 @@ int dai_dmic_set_config_nhlt(struct dai_intel_dmic *dmic, const void *bespoke_cf
 #else
 	ret = dai_nhlt_dmic_dai_params_get(dmic);
 #endif
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 
 	LOG_INF("dmic_set_config_nhlt(): enable0 %u, enable1 %u",
 		dmic->enable[0], dmic->enable[1]);

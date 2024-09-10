@@ -12,6 +12,7 @@ import time
 
 from colorama import Fore
 
+from twisterlib.statuses import TwisterStatus
 from twisterlib.testplan import TestPlan
 from twisterlib.reports import Reporting
 from twisterlib.hardwaremap import HardwareMap
@@ -94,6 +95,9 @@ def main(options, default_options):
                     print("Renaming output directory to {}".format(new_out))
                     shutil.move(options.outdir, new_out)
                     break
+            else:
+                sys.exit(f"Too many '{options.outdir}.*' directories. Run either with --no-clean, "
+                         "or --clobber-output, or delete these directories manually.")
 
     previous_results_file = None
     os.makedirs(options.outdir, exist_ok=True)
@@ -138,7 +142,7 @@ def main(options, default_options):
         # command line
 
         for i in tplan.instances.values():
-            if i.status == "filtered":
+            if i.status == TwisterStatus.FILTER:
                 if options.platform and i.platform.name not in options.platform:
                     continue
                 logger.debug(
@@ -154,10 +158,10 @@ def main(options, default_options):
     report = Reporting(tplan, env)
     plan_file = os.path.join(options.outdir, "testplan.json")
     if not os.path.exists(plan_file):
-        report.json_report(plan_file)
+        report.json_report(plan_file, env.version)
 
     if options.save_tests:
-        report.json_report(options.save_tests)
+        report.json_report(options.save_tests, env.version)
         return 0
 
     if options.report_summary is not None:
