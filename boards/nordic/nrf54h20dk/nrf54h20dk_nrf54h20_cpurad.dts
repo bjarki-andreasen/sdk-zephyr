@@ -11,6 +11,7 @@
 
 /delete-node/ &cpuapp_cpuppr_ipc;
 /delete-node/ &cpuapp_cpusys_ipc;
+/delete-node/ &cpuapp_cpuflpr_ipc;
 /delete-node/ &cpusec_cpuapp_ipc;
 
 / {
@@ -115,4 +116,8 @@ ipc0: &cpuapp_cpurad_ipc {
 
 &cpurad_ieee802154 {
 	status = "okay";
+};
+
+zephyr_udc0: &usbhs {
+	status = "disabled";
 };
