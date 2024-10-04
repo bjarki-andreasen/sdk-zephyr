@@ -13,6 +13,9 @@
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/mesh.h>
+#if defined(CONFIG_BT_LL_SOFTDEVICE)
+#include <sdc_hci_vs.h>
+#endif
 
 #include "common/bt_str.h"
 
@@ -134,6 +137,28 @@ static inline struct bt_mesh_ext_adv *gatt_adv_get(void)
 	} else {
 		return &advs[0];
 	}
+}
+
+static int set_adv_randomness(uint8_t handle, int rand_us)
+{
+#if defined(CONFIG_BT_LL_SOFTDEVICE)
+	struct net_buf *buf;
+	sdc_hci_cmd_vs_set_adv_randomness_t *cmd_params;
+
+	buf = bt_hci_cmd_create(SDC_HCI_OPCODE_CMD_VS_SET_ADV_RANDOMNESS, sizeof(*cmd_params));
+	if (!buf) {
+		LOG_ERR("Could not allocate command buffer");
+		return -ENOMEM;
+	}
+
+	cmd_params = net_buf_add(buf, sizeof(*cmd_params));
+	cmd_params->adv_handle = handle;
+	cmd_params->rand_us = rand_us;
+
+	return bt_hci_cmd_send_sync(SDC_HCI_OPCODE_CMD_VS_SET_ADV_RANDOMNESS, buf, NULL);
+#else
+	return 0;
+#endif /* defined(CONFIG_BT_LL_SOFTDEVICE) */
 }
 
 static int adv_start(struct bt_mesh_ext_adv *ext_adv,
@@ -424,6 +449,18 @@ void bt_mesh_adv_init(void)
 	for (int i = 0; i < ARRAY_SIZE(advs); i++) {
 		(void)memcpy(&advs[i].adv_param, &adv_param, sizeof(adv_param));
 	}
+
+#if defined(CONFIG_BT_LL_SOFTDEVICE)
+	const sdc_hci_cmd_vs_scan_accept_ext_adv_packets_set_t cmd_params = {
+		.accept_ext_adv_packets = IS_ENABLED(CONFIG_BT_MESH_ADV_EXT_ACCEPT_EXT_ADV_PACKETS),
+	};
+
+	int err = sdc_hci_cmd_vs_scan_accept_ext_adv_packets_set(&cmd_params);
+
+	if (err) {
+		LOG_ERR("Failed to set accept_ext_adv_packets: %d", err);
+	}
+#endif
 }
 
 static struct bt_mesh_ext_adv *adv_instance_find(struct bt_le_ext_adv *instance)
@@ -490,6 +527,15 @@ int bt_mesh_adv_enable(void)
 					   &advs[i].instance);
 		if (err) {
 			return err;
+		}
+
+		if (IS_ENABLED(CONFIG_BT_LL_SOFTDEVICE) &&
+		    IS_ENABLED(CONFIG_BT_MESH_ADV_EXT_FRIEND_SEPARATE) &&
+		    advs[i].tags == BT_MESH_ADV_TAG_BIT_FRIEND) {
+			err = set_adv_randomness(advs[i].instance->handle, 0);
+			if (err) {
+				LOG_ERR("Failed to set zero randomness: %d", err);
+			}
 		}
 	}
 

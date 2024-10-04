@@ -10,6 +10,7 @@
 #include <zephyr/dt-bindings/misc/nordic-nrf-ficr-nrf54h20.h>
 #include <zephyr/dt-bindings/misc/nordic-domain-id-nrf54h20.h>
 #include <zephyr/dt-bindings/misc/nordic-owner-id-nrf54h20.h>
+#include <zephyr/dt-bindings/misc/nordic-tddconf.h>
 
 /delete-node/ &sw_pwm;
 
@@ -408,6 +409,15 @@
 					compatible = "nordic,nrf-ieee802154";
 					status = "disabled";
 				};
+
+				bt_hci_sdc: bt_hci_sdc {
+					compatible = "nordic,bt-hci-sdc";
+					status = "disabled";
+				};
+				bt_hci_controller: bt_hci_controller {
+					compatible = "zephyr,bt-hci-ll-sw-split";
+					status = "disabled";
+				};
 			};
 
 			ccm030: ccm@3a000 {
@@ -477,7 +487,7 @@
 			};
 
 			exmif: spi@95000 {
-				compatible = "nordic,nrf-exmif";
+				compatible = "nordic,nrf-exmif", "snps,designware-spi";
 				#address-cells = <1>;
 				#size-cells = <0>;
 				reg = <0x95000 0x500 0x95500 0xb00>;

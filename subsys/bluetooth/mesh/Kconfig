@@ -59,12 +59,16 @@ choice BT_MESH_ADV
 
 menuconfig BT_MESH_ADV_LEGACY
 	bool "Legacy advertising"
+	depends on BT_LL_SW_SPLIT
 	help
 	  Use legacy advertising commands for mesh sending. Legacy
-	  advertising is significantly slower than the extended advertising, but
-	  is supported by all controllers.
+	  advertising is significantly slower than the extended advertising.
 
-	  WARNING: The legacy advertiser can occasionally do more message
+	  WARNING: This feature is not supported in NCS. The legacy advertiser will not work
+	  with SDC, as attempting to start an advertisement during the scanner duty cycle
+	  will result in an error. The Zephyr Link Layer can be used experimentally as an
+	  alternative.
+	  The legacy advertiser can occasionally do more message
 	  retransmissions than requested because of limitations of HCI
 	  interface API.
 
@@ -147,6 +151,17 @@ config BT_MESH_ADV_EXT_FRIEND_SEPARATE
 	  extended advertising set makes the Friend node send friendship
 	  messages as close to the start of the ReceiveWindow as possible,
 	  thus reducing the scanning time on the Low Power node.
+
+config BT_MESH_ADV_EXT_ACCEPT_EXT_ADV_PACKETS
+	bool "Reject or accept extended advertising packets"
+	depends on BT_LL_SOFTDEVICE
+	help
+	  Configure the scanner and initiator to either reject or accept extended
+	  advertising packets by the SoftDevice Controller. This is set to false
+	  by default, to prevent loss of scan time when receiving a pointer packet
+	  while scanning for Bluetooth Mesh packets. Set to true if extended
+	  advertising packets are to be received by the SoftDevice Controller for
+	  purposes other than Bluetooth Mesh.
 
 endif # BT_MESH_ADV_EXT
 
@@ -1642,7 +1657,7 @@ config BT_MESH_LPN_INIT_POLL_TIMEOUT
 config BT_MESH_LPN_SCAN_LATENCY
 	int "Latency for enabling scanning"
 	range 0 50
-	default 15
+	default 2
 	help
 	  Latency in milliseconds that it takes to enable scanning. This
 	  is in practice how much time in advance before the Receive Window

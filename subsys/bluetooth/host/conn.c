@@ -681,7 +681,17 @@ static int send_buf(struct bt_conn *conn, struct net_buf *buf,
 
 	uint16_t frag_len = MIN(conn_mtu(conn), len);
 
-	__ASSERT_NO_MSG(buf->ref == 1);
+	/* If ATT sent callback is delayed until data transmission is done by BLE controller, the
+	 * transmitted buffer may have an additional reference. The reference is used to extend
+	 * lifetime of the net buffer until the data transmission is confirmed by ACK of the remote.
+	 *
+	 * send_buf function can be called multiple times, if buffer has to be fragmented over HCI.
+	 * In that case, the callback is provided as an argument only for the last transmitted
+	 * fragment. The `buf->ref == 1` check is skipped because it's impossible to properly
+	 * validate number of references for the sent fragments if buffers may have the additional
+	 * reference.
+	 */
+	__ASSERT_NO_MSG(IS_ENABLED(CONFIG_BT_ATT_SENT_CB_AFTER_TX) || (buf->ref == 1));
 
 	if (buf->len > frag_len) {
 		LOG_DBG("keep %p around", buf);
@@ -3319,6 +3329,42 @@ int bt_conn_le_subrate_request(struct bt_conn *conn,
 	return bt_hci_cmd_send_sync(BT_HCI_OP_LE_SUBRATE_REQUEST, buf, NULL);
 }
 #endif /* CONFIG_BT_SUBRATING */
+
+#if defined(CONFIG_BT_CHANNEL_SOUNDING)
+void notify_remote_cs_capabilities(struct bt_conn *conn, struct bt_conn_le_cs_capabilities params)
+{
+	struct bt_conn_cb *callback;
+
+	SYS_SLIST_FOR_EACH_CONTAINER(&conn_cbs, callback, _node) {
+		if (callback->remote_cs_capabilities_available) {
+			callback->remote_cs_capabilities_available(conn, &params);
+		}
+	}
+
+	STRUCT_SECTION_FOREACH(bt_conn_cb, cb) {
+		if (cb->remote_cs_capabilities_available) {
+			cb->remote_cs_capabilities_available(conn, &params);
+		}
+	}
+}
+
+void notify_remote_cs_fae_table(struct bt_conn *conn, struct bt_conn_le_cs_fae_table params)
+{
+	struct bt_conn_cb *callback;
+
+	SYS_SLIST_FOR_EACH_CONTAINER(&conn_cbs, callback, _node) {
+		if (callback->remote_cs_fae_table_available) {
+			callback->remote_cs_fae_table_available(conn, &params);
+		}
+	}
+
+	STRUCT_SECTION_FOREACH(bt_conn_cb, cb) {
+		if (cb->remote_cs_fae_table_available) {
+			cb->remote_cs_fae_table_available(conn, &params);
+		}
+	}
+}
+#endif /* CONFIG_BT_CHANNEL_SOUNDING */
 
 int bt_conn_le_param_update(struct bt_conn *conn,
 			    const struct bt_le_conn_param *param)

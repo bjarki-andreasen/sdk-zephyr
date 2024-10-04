@@ -14,6 +14,8 @@ config MBEDTLS_PROMPTLESS
 	  dependent sub-configurations and thus prevent stuck symbol behavior.
 
 rsource "Kconfig.psa"
+# Add nordic additions to Kconfigs
+rsource "Kconfig.psa.nordic"
 
 menuconfig MBEDTLS
 	bool "mbed TLS Support" if !MBEDTLS_PROMPTLESS
@@ -28,6 +30,7 @@ choice MBEDTLS_IMPLEMENTATION
 
 config MBEDTLS_BUILTIN
 	bool "Use Zephyr in-tree mbedTLS version"
+	depends on ! DISABLE_MBEDTLS_BUILTIN
 	help
 	  Link with mbedTLS sources included with Zephyr distribution.
 	  Included mbedTLS version is well integrated with and supported
@@ -40,6 +43,12 @@ config MBEDTLS_LIBRARY
 	  users only.
 
 endchoice
+
+config DISABLE_MBEDTLS_BUILTIN
+	bool
+	help
+	  Subsystems cannot deselect MBEDTLS_BUILTIN, but they can select
+	  DISABLE_MBEDTLS_BUILTIN.
 
 config CUSTOM_MBEDTLS_CFG_FILE
 	bool "Custom mbed TLS configuration file"

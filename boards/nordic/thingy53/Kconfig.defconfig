@@ -5,6 +5,12 @@
 
 if BOARD_THINGY53_NRF5340_CPUAPP || BOARD_THINGY53_NRF5340_CPUAPP_NS
 
+config BOOTLOADER_MCUBOOT
+	default y if !MCUBOOT
+
+config BOARD_ENABLE_CPUNET
+	default y if !MCUBOOT
+
 # Code Partition:
 #
 # For the secure version of the board the firmware is linked at the beginning
@@ -131,6 +137,16 @@ config LOG_PROCESS_THREAD_STARTUP_DELAY_MS
 endif # LOG
 
 endif # BOARD_SERIAL_BACKEND_CDC_ACM
+
+# By default, a USB CDC ACM instance is already enabled in the board's DTS.
+# It is not necessary for nRF Connect SDK to add another instance if MCUBoot
+# bootloader is built as a child image.
+config MCUBOOT_USB_SUPPORT
+	bool
+	default n
+
+config NORDIC_QSPI_NOR
+	default y
 
 endif # BOARD_THINGY53_NRF5340_CPUAPP || BOARD_THINGY53_NRF5340_CPUAPP_NS
 

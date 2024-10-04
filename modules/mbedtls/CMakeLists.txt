@@ -39,6 +39,8 @@ zephyr_interface_library_named(mbedTLS)
     # Add regular includes
     target_include_directories(mbedTLS INTERFACE
         ${ZEPHYR_CURRENT_MODULE_DIR}/include
+        ${ZEPHYR_CURRENT_MODULE_DIR}/include/library
+        ${ZEPHYR_CURRENT_MODULE_DIR}/library
         configs
         include
     )
@@ -170,7 +172,6 @@ zephyr_interface_library_named(mbedTLS)
       ${ZEPHYR_CURRENT_MODULE_DIR}/library/pkparse.c
       ${ZEPHYR_CURRENT_MODULE_DIR}/library/pkwrite.c
       ${ZEPHYR_CURRENT_MODULE_DIR}/library/pk.c
-      ${ZEPHYR_CURRENT_MODULE_DIR}/library/pk_ecc.c
       ${ZEPHYR_CURRENT_MODULE_DIR}/library/pk_wrap.c
     )
 

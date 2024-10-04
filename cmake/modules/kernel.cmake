@@ -173,7 +173,9 @@ if(CONFIG_LLEXT AND CONFIG_LLEXT_TYPE_ELF_SHAREDLIB)
   set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
 endif()
 
-include(${BOARD_DIR}/board.cmake OPTIONAL)
+foreach(dir ${BOARD_DIRECTORIES})
+  include(${dir}/board.cmake OPTIONAL)
+endforeach()
 
 # If we are using a suitable ethernet driver inside qemu, then these options
 # must be set, otherwise a zephyr instance cannot receive any network packets.
@@ -247,4 +249,8 @@ if("${CMAKE_EXTRA_GENERATOR}" STREQUAL "Eclipse CDT4")
   # with project includes and defines
   include(${ZEPHYR_BASE}/cmake/ide/eclipse_cdt4_generator_amendment.cmake)
   eclipse_cdt4_generator_amendment(1)
+endif()
+
+if(ZEPHYR_NRF_MODULE_DIR)
+  include(${ZEPHYR_NRF_MODULE_DIR}/cmake/partition_manager.cmake)
 endif()
