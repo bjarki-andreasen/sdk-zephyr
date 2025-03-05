@@ -23,6 +23,8 @@ manifest:
       url-base: https://github.com/zephyrproject-rtos
     - name: babblesim
       url-base: https://github.com/BabbleSim
+    - name: ncs-branch
+      url-base: https://github.com/bjarki-andreasen
 
   group-filter: [-babblesim, -optional]
 
@@ -188,6 +190,7 @@ manifest:
       groups:
         - hal
     - name: hal_nordic
+      remote: ncs-branch
       revision: 54bde38c6f6ffb3780b26ae728cf79426184384e
       path: modules/hal/nordic
       groups:
