@@ -44,7 +44,12 @@ zephyr_library_sources_ifdef(CONFIG_SPI_MCUX_FLEXIO spi_mcux_flexio.c)
 zephyr_library_sources_ifdef(CONFIG_SPI_MEC5_QSPI spi_mchp_mec5_qspi.c)
 zephyr_library_sources_ifdef(CONFIG_SPI_NPCX_SPIP spi_npcx_spip.c)
 zephyr_library_sources_ifdef(CONFIG_SPI_NRFX_SPI spi_nrfx_spi.c spi_nrfx_common.c)
+w
+3
 zephyr_library_sources_ifdef(CONFIG_SPI_NRFX_SPIM spi_nrfx_spim.c spi_nrfx_common.c)
+d
+d
+d
 zephyr_library_sources_ifdef(CONFIG_SPI_NRFX_SPIS spi_nrfx_spis.c)
 zephyr_library_sources_ifdef(CONFIG_SPI_NUMAKER spi_numaker.c)
 zephyr_library_sources_ifdef(CONFIG_SPI_OC_SIMPLE spi_oc_simple.c)
