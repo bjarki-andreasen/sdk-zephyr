@@ -200,7 +200,7 @@ manifest:
       groups:
         - hal
     - name: hal_nordic
-      revision: 5c1df3fe9bc144e558b3506cef6cf33652bb2539
+      revision: af3848538da37360913bc68eeef40f32430b7c52
       path: modules/hal/nordic
       groups:
         - hal
@@ -344,16 +344,16 @@ manifest:
       groups:
         - tools
     - name: nrf_hw_models
-      revision: 4d11a73d62bf999205f16de21a0ef675501f5b21
+      revision: 63ccab2988bf4c144b3cd324a0277e03206fa413
       path: modules/bsim_hw_models/nrf_hw_models
     - name: nrf_wifi
-      revision: 1e37ff7a739173cfe7adb248f9637d385a36c96b
+      revision: 1a4e59f4c6685877f6bff08bb1812bf9318da6d2
       path: modules/lib/nrf_wifi
     - name: open-amp
       revision: 5efe7974f9546582e99f5a842a816ea4b65f5227
       path: modules/lib/open-amp
     - name: openthread
-      revision: 2bc7712f57af22058770d1ef131ad3da79a0c764
+      revision: e4d97681c53ec1cc34af1404ad2960adda4ba691
       path: modules/lib/openthread
     - name: percepio
       path: modules/debug/percepio
@@ -391,7 +391,7 @@ manifest:
       groups:
         - tee
     - name: uoscore-uedhoc
-      revision: ac80c3bf2b88deec86d129654fbde09761582342
+      revision: e47f6465a96d12a54b875e5f6e5b2a203fb0d61d
       path: modules/lib/uoscore-uedhoc
     - name: zcbor
       revision: 9164bd18dcd88ff9d9ef98279501fc1093571017

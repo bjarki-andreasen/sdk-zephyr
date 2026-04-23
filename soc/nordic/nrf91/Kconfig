@@ -47,6 +47,9 @@ config NRF_ENABLE_ICACHE
 	bool "Instruction cache (I-Cache)"
 	default y
 
+config NRF91_ANOMALY_36_WORKAROUND
+	bool "Anomaly 36 workaround"
+
 config  NRF_TRUSTZONE_RAM_REGION_SIZE
 	hex
 	default NRF_SPU_RAM_REGION_SIZE

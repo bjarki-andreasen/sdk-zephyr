@@ -200,6 +200,8 @@
 #define NRF_FUN_SDP_MSPI_CS3 69U
 /** SDP_MSPI chip select 4 */
 #define NRF_FUN_SDP_MSPI_CS4 70U
+/** Generic soft peripheral pin */
+#define NRF_FUN_SP_PIN       NRF_FUN_SDP_MSPI_SCK
 /** High-Performance Framework MSPI clock pin */
 #define NRF_FUN_HPF_MSPI_SCK NRF_FUN_SDP_MSPI_SCK
 /** High-Performance Framework MSPI data pin 0 */
